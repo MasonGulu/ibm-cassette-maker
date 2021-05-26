@@ -117,7 +117,10 @@ while byte:
 		writeByte(os.stat(sys.argv[1]).st_size - byteswritten + 1)
 	
 	for x in range(0, 255):
-		writeByte(byte[x])
+		if(byte[x] == 0x0A):
+			writeByte(0x0D) # Substitute Line Feed for Carriage Return
+		else:
+			writeByte(byte[x])
 		byteswritten = byteswritten + 1
 		if (x + 1) >= len(byte) and x != 254:
 			print("End of file reached.")
