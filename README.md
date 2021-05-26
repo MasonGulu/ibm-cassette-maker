@@ -5,11 +5,13 @@ It's still somewhat early on in development, so things are strange and obscure.
 
 Usage:
 asciiwrite.py [ascii file] [tape filename]
+
 This takes in a text file with an ascii basic listing in it, and creates a file that can then be loaded using load.
 Known issues:
-* Newlines are not properly represented, this results in a one line basic program that may not function correctly.
+* None
 
 binwrite.py [binary file] [tape filename] [segment] [offset]
+
 This takes in a binary file and converts it to a memory dump file that can be loaded using bload.
 Known issues:
 * The segment and offset seem to do nothing, so I tend to just set them to 0 0.
