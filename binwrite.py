@@ -14,14 +14,17 @@ outputf.setsampwidth(2)
 
 on = 0x7FFF
 off = 0
+sys.argv = sys.argv[1:]
+if len(sys.argv) < 4:
+	print("Usage:")
+	print("binwrite [input file] [basic filename] [segment] [offset]")
+	sys.exit(0)
 
-print("Filename", "Basic filename", "Segment", "Offset")
-
-segment = int(sys.argv[3]).to_bytes(2, "little")
-offset = int(sys.argv[4]).to_bytes(2, "little")
+segment = int(sys.argv[2]).to_bytes(2, "little")
+offset = int(sys.argv[3]).to_bytes(2, "little")
 
 global crc_reg
-inputf = open(sys.argv[1], 'rb')
+inputf = open(sys.argv[0], 'rb')
 
 crc_reg = 0xFFFF
 
@@ -48,7 +51,7 @@ def writeByte(value):
 	for x in range(7, -1, -1):
 		write((value & (1 << x)) >> x)
 
-filename = sys.argv[2]
+filename = sys.argv[1]
 
 # Add silence
 for x in range(0, framerate):
@@ -74,7 +77,7 @@ for x in range(0, 8):
 # Flag for memory area
 writeByte(0x01)
 # Write filesize word
-filesize = (os.stat(sys.argv[1]).st_size).to_bytes(2, "little")
+filesize = (os.stat(sys.argv[0]).st_size).to_bytes(2, "little")
 writeByte(filesize[0])
 writeByte(filesize[1])
 
