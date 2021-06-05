@@ -14,9 +14,15 @@ outputf.setsampwidth(2)
 
 on = 0x7FFF
 off = 0
+sys.argv = sys.argv[1:]
+if len(sys.argv) < 2:
+	print("Usage:")
+	print("asciiwrite [input file] [basic filename]")
+	sys.exit(0)
+
 
 global crc_reg
-inputf = open(sys.argv[1], 'rb')
+inputf = open(sys.argv[0], 'rb')
 
 crc_reg = 0xFFFF
 
@@ -43,7 +49,7 @@ def writeByte(value):
 	for x in range(7, -1, -1):
 		write((value & (1 << x)) >> x)
 
-filename = sys.argv[2]
+filename = sys.argv[1]
 
 # Add silence
 for x in range(0, framerate):
@@ -69,7 +75,7 @@ for x in range(0, 8):
 # Flag for ascii listing
 writeByte(0b01000000)
 # Write filesize word
-filesize = (os.stat(sys.argv[1]).st_size).to_bytes(2, "little")
+filesize = (os.stat(sys.argv[0]).st_size).to_bytes(2, "little")
 writeByte(filesize[0])
 writeByte(filesize[1])
 # Segment word
@@ -111,14 +117,14 @@ while byte:
 	#global crc_reg
 	crc_reg = 0xFFFF
 	# Datablock, 254 and 255 because the data block is 256 bytes minus the 1 byte remainder header
-	if (os.stat(sys.argv[1]).st_size - byteswritten) > 254:
+	if (os.stat(sys.argv[0]).st_size - byteswritten) > 254:
 		writeByte(0x00)
 	else:
-		writeByte(os.stat(sys.argv[1]).st_size - byteswritten + 1)
+		writeByte(os.stat(sys.argv[0]).st_size - byteswritten + 1)
 	
 	for x in range(0, 255):
 		if(byte[x] == 0x0A):
-			writeByte(0x0D) # Substitute Line Feed for Carriage Return
+			writeByte(0x0D)
 		else:
 			writeByte(byte[x])
 		byteswritten = byteswritten + 1
