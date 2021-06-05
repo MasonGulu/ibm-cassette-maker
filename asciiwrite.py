@@ -78,6 +78,11 @@ writeByte(0b01000000)
 filesize = (os.stat(sys.argv[0]).st_size).to_bytes(2, "little")
 writeByte(filesize[0])
 writeByte(filesize[1])
+
+# The segment and offset are that of the basic program on the IBM Diagnosis Cassette
+# Since the loading and saving is handled entirely by basic, I don't think that it matters.
+# Basic should just load it wherever it decides there is space.
+
 # Segment word
 writeByte(0x60)
 writeByte(0x00)
