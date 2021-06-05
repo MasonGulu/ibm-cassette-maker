@@ -1,7 +1,6 @@
 This is a project written in python that will allow you to create wav audio files that can be loaded through cassette basic on the IBM 5150.
 
-It's still somewhat early on in development, so things are strange and obscure.
-
+The only requirement should be python 3.
 
 Usage:
 asciiwrite.py [ascii file] [tape filename]
