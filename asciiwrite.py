@@ -1,6 +1,6 @@
 import sys, wave, os
 
-outputf = wave.open("file.wav",'wb')
+
 one = 0.001 # Time in seconds
 zero = 0.0005 # Time in seconds
 
@@ -8,9 +8,6 @@ framerate = 44100 # Frames / second
 oneframe = (one / 2) * framerate # Frames per cycle, two cycles per number
 zeroframe = (zero / 2) * framerate # Frames per cycle, two cycles per number
 
-outputf.setframerate(framerate)
-outputf.setnchannels(1)
-outputf.setsampwidth(2)
 
 on = 0x7FFF
 off = 0
@@ -20,6 +17,10 @@ if len(sys.argv) < 2:
 	print("asciiwrite [input file] [basic filename]")
 	sys.exit(0)
 
+outputf = wave.open(sys.argv[1]+"_ASCII.wav",'wb')
+outputf.setframerate(framerate)
+outputf.setnchannels(1)
+outputf.setsampwidth(2)
 
 global crc_reg
 inputf = open(sys.argv[0], 'rb')
@@ -78,11 +79,6 @@ writeByte(0b01000000)
 filesize = (os.stat(sys.argv[0]).st_size).to_bytes(2, "little")
 writeByte(filesize[0])
 writeByte(filesize[1])
-
-# The segment and offset are that of the basic program on the IBM Diagnosis Cassette
-# Since the loading and saving is handled entirely by basic, I don't think that it matters.
-# Basic should just load it wherever it decides there is space.
-
 # Segment word
 writeByte(0x60)
 writeByte(0x00)
