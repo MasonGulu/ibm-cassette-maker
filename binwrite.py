@@ -1,6 +1,6 @@
 import sys, wave, os
 
-outputf = wave.open("file.wav",'wb')
+
 one = 0.001 # Time in seconds
 zero = 0.0005 # Time in seconds
 
@@ -8,9 +8,7 @@ framerate = 44100 # Frames / second
 oneframe = (one / 2) * framerate # Frames per cycle, two cycles per number
 zeroframe = (zero / 2) * framerate # Frames per cycle, two cycles per number
 
-outputf.setframerate(framerate)
-outputf.setnchannels(1)
-outputf.setsampwidth(2)
+
 
 on = 0x7FFF
 off = 0
@@ -19,6 +17,12 @@ if len(sys.argv) < 4:
 	print("Usage:")
 	print("binwrite [input file] [basic filename] [segment] [offset]")
 	sys.exit(0)
+
+outputf = wave.open(sys.argv[1]+'_BIN.wav','wb')
+outputf.setframerate(framerate)
+outputf.setnchannels(1)
+outputf.setsampwidth(2)
+
 
 segment = int(sys.argv[2]).to_bytes(2, "little")
 offset = int(sys.argv[3]).to_bytes(2, "little")
