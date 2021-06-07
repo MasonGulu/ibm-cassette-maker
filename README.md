@@ -9,6 +9,7 @@ This takes in a text file with an ascii basic listing in it, and creates a file 
 Known issues:
 * None
 
+Usage:
 binwrite.py [binary file] [tape filename] [segment] [offset]
 
 This takes in a binary file and converts it to a memory dump file that can be loaded using bload.
