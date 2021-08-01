@@ -1,6 +1,9 @@
-# Version 1.0
-import sys, wave, os
-
+# Version 1.1
+import sys
+import wave 
+import os 
+from datetime import datetime
+startTime = datetime.now()
 
 one = 0.001 # Time in seconds
 zero = 0.0005 # Time in seconds
@@ -36,7 +39,7 @@ crc_reg = 0xFFFF
 def crc_gen(crc_bit):
 	global crc_reg
 	carry = 0
-	if (crc_bit) != (crc_reg & 0x8000) >> 15:
+	if (crc_bit) != ((crc_reg >> 15) & 1): # I think I sped this up a bit
 		# These are unequal
 		crc_reg = crc_reg ^ 0x0810
 		carry = 1
@@ -45,7 +48,6 @@ def crc_gen(crc_bit):
 def write(value):
 	crc_gen(value)
 	length = (int(zeroframe), int(oneframe))
-	values = (off, on)
 	for onlen in range(0, length[value]):
 		outputf.writeframes(int.to_bytes(on, 2, "little"))
 		
@@ -54,7 +56,9 @@ def write(value):
 
 def writeByte(value):
 	for x in range(7, -1, -1):
-		write((value & (1 << x)) >> x)
+		write((value >> x) & 1)
+		# No idea why I did it the other way before. This is about 17% faster in limited testing.
+
 
 filename = sys.argv[1]
 
@@ -69,7 +73,7 @@ for x in range(0, 256):
 write(0) #Sync bit
 writeByte(0x16) #Sync byte
 
-
+print("Silence finished at "+str(datetime.now() - startTime))
 #reset crc calculation
 crc_reg = 0xFFFF
 writeByte(0xA5)
@@ -108,6 +112,8 @@ writeByte(0xFF)
 writeByte(0xFF)
 writeByte(0xFF)
 
+print("Basic header finished at "+str(datetime.now() - startTime))
+
 # Add silence
 for x in range(0, framerate):
 	outputf.writeframes(int.to_bytes(0, 1, "little"))
@@ -122,24 +128,22 @@ byteswritten = 0
 
 byte = inputf.read(256)
 while byte:
-	#global crc_reg
 	crc_reg = 0xFFFF
-	
 	for x in range(0, 256):
 		writeByte(byte[x])
 		byteswritten = byteswritten + 1
 		if (x + 1) >= len(byte) and x != 255:
-			print("End of file reached.")
+			print("EOF reached.")
 			# reached the end of file
 			for y in range(x, 255):
-				#print(y)
+				# fill rest of block with null
 				writeByte(0b00100000)
 			break
 	crcbyte = (crc_reg^0xffff).to_bytes(2, "little")
 	writeByte(crcbyte[1])
 	writeByte(crcbyte[0])
 	byte = inputf.read(256)
-	print(str(byteswritten) + " bytes written.")
+	print("Written bytes:", byteswritten)
 
 writeByte(0xFF)
 writeByte(0xFF)
@@ -148,5 +152,7 @@ writeByte(0xFF)
 
 
 # Add silence
-for x in range(0, framerate):
-	outputf.writeframes(int.to_bytes(0, 1, "little"))
+for x in range(0, round(framerate/4)):
+	outputf.writeframes(int.to_bytes(0, 4, "little"))
+
+print("Finished at "+str(datetime.now() - startTime))

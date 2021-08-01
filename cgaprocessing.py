@@ -4,10 +4,11 @@ import sys
 colorsCGA0 = [0x000000, 0x5c9c0c, 0x993100, 0x9e5a02]
 colorsCGA1 = [0x000000, 0x55a6ab, 0x954eab, 0xababab]
 colorsCGAC = [0x000000, 0x55a6ab, 0x993100, 0xababab]
+colorsCGAC2 = [0x000000, 0x329f40, 0x942d9d, 0x929aa6] # This palette is from my personal testing with the weird CGA card I have
 
 highres = False # Highres mode, automatically detected for full screen images
-selected = colorsCGAC # Which color pallette to use
-tolerance = 0x030303
+selected = colorsCGAC2 # Which color pallette to use
+tolerance = 0x010101
 
 sys.argv = sys.argv[1:]
 if len(sys.argv) < 2:
@@ -74,13 +75,13 @@ if im.mode == "RGB":
                 # This is the end of the byte.
                 tmppos = 8
                 if (y % 2 == 0):
-                    even.append(tmpint.to_bytes(1,"little")) # Note, this is called even because I'm starting at 0. CGA starts at 1, so this is technically odd
+                    even.append(tmpint.to_bytes(1,"little")) # Note, this is called even because I'm starting at 0
                 else:
                     odd.append(tmpint.to_bytes(1,"little"))
                     # I hate emulating bitwise stuff, and then converting my emulated bitwise stuff into actual byte objects resulting in the question of am I accidentally reversing what I already did? or is this the correct orientation, and then when you look at it later you are incredibly confused on if I intended on reversing the order of the bits, or if it just miraculously lined up. yes this line is long.
                 tmpint = 0
     count = 0 # Amount of bytes written
-    evenfile = open(sys.argv[1]+"odd", "wb") # Yes I am mixing up the filenames. This is because CGA starts at 1, python 0.
+    evenfile = open(sys.argv[1]+"even", "wb") # Mixing up the filenames was wrong. CGA starts at 0.
     for byte in even:
         count = count + 1
         outputfile.write(byte)
@@ -88,7 +89,7 @@ if im.mode == "RGB":
     evenfile.close()
     for byte in range(count, 8192):
         outputfile.write(int.to_bytes(0,1,"little"))
-    oddfile = open(sys.argv[1]+"even", "wb")
+    oddfile = open(sys.argv[1]+"odd", "wb")
     for byte in odd:
         outputfile.write(byte)
         oddfile.write(byte)

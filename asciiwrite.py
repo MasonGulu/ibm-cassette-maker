@@ -1,4 +1,4 @@
-# Version 1.0
+# Version 1.1
 import sys, wave, os
 
 
@@ -106,20 +106,21 @@ writeByte(0xFF)
 for x in range(0, framerate):
 	outputf.writeframes(int.to_bytes(0, 1, "little"))
 
-for x in range(0, 256):
-	writeByte(0xff)
-	# Write 256 bytes of 1s
 
-write(0) #Sync bit
-writeByte(0x16) #Sync byte
 byteswritten = 0
 
 byte = inputf.read(255)
 while byte:
-	#global crc_reg
+	# Every single block of data in an ascii file needs a lead in
+	for x in range(0, 256):
+		writeByte(0xff)
+	# Write 256 bytes of 1s
+
+	write(0) #Sync bit
+	writeByte(0x16) #Sync byte
 	crc_reg = 0xFFFF
 	# Datablock, 254 and 255 because the data block is 256 bytes minus the 1 byte remainder header
-	if (os.stat(sys.argv[0]).st_size - byteswritten) > 254:
+	if (os.stat(sys.argv[0]).st_size - byteswritten) > 255:
 		writeByte(0x00)
 	else:
 		writeByte(os.stat(sys.argv[0]).st_size - byteswritten + 1)
@@ -134,7 +135,6 @@ while byte:
 			print("End of file reached.")
 			# reached the end of file
 			for y in range(x, 254):
-				#print(y)
 				writeByte(0b00100000)
 			break
 	crcbyte = (crc_reg^0xffff).to_bytes(2, "little")
@@ -142,11 +142,18 @@ while byte:
 	writeByte(crcbyte[0])
 	byte = inputf.read(255)
 	print(str(byteswritten) + " bytes written.")
+	writeByte(0xFF)
+	writeByte(0xFF)
+	writeByte(0xFF)
+	writeByte(0xFF)
+	# 4 byte trailer
 
-writeByte(0xFF)
-writeByte(0xFF)
-writeByte(0xFF)
-writeByte(0xFF)
+	# Add a half second of silence
+	for x in range(0, framerate):
+		outputf.writeframes(int.to_bytes(0, 1, "little"))
+
+
+
 
 
 # Add silence
