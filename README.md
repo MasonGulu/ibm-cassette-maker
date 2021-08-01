@@ -7,7 +7,7 @@ asciiwrite.py [ascii file] [tape filename]
 
 This takes in a text file with an ascii basic listing in it, and creates a file that can then be loaded using load.
 Known issues:
-* Currently files above 255 bytes do not seem to load correctly. I will work on fixing this
+None.
 
 Usage:
 binwrite.py [binary file] [tape filename] [segment] [offset]
