@@ -27,6 +27,8 @@ outputf.setframerate(framerate)
 outputf.setnchannels(1)
 outputf.setsampwidth(2)
 
+secondsperbyte = 0.00210746417984189723
+print("Estimated time: ", os.stat(sys.argv[0]).st_size*secondsperbyte, "seconds.")
 
 segment = int(sys.argv[2]).to_bytes(2, "little")
 offset = int(sys.argv[3]).to_bytes(2, "little")
@@ -73,7 +75,6 @@ for x in range(0, 256):
 write(0) #Sync bit
 writeByte(0x16) #Sync byte
 
-print("Silence finished at "+str(datetime.now() - startTime))
 #reset crc calculation
 crc_reg = 0xFFFF
 writeByte(0xA5)
