@@ -1,4 +1,21 @@
 # Version 1.1
+# Convert binary files into audio files suitable for loading with bload in Cassette Basic on the IBM PC 5150
+# Copyright (C) 2021 Mason Gulu
+#   This program is free software; you can redistribute it and/or modify
+#   it under the terms of the GNU General Public License as published by
+#   the Free Software Foundation; either version 2 of the License, or
+#   (at your option) any later version.
+
+#   This program is distributed in the hope that it will be useful,
+#   but WITHOUT ANY WARRANTY; without even the implied warranty of
+#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#   GNU General Public License for more details.
+
+#   You should have received a copy of the GNU General Public License along
+#   with this program; if not, write to the Free Software Foundation, Inc.,
+#   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+
+# If you have any questions or comments you may contact me at mason.gulu@gmail.com
 import sys
 import wave 
 import os 
@@ -8,7 +25,7 @@ startTime = datetime.now()
 one = 0.001 # Time in seconds
 zero = 0.0005 # Time in seconds
 
-framerate = 44100 # Frames / second
+framerate = 4000 # Frames / second
 oneframe = (one / 2) * framerate # Frames per cycle, two cycles per number
 zeroframe = (zero / 2) * framerate # Frames per cycle, two cycles per number
 
@@ -19,7 +36,8 @@ off = 0
 sys.argv = sys.argv[1:]
 if len(sys.argv) < 4:
 	print("Usage:")
-	print("binwrite [input file] [basic filename] [segment] [offset]")
+	print("binwrite [input file] [basic filename] [segment] [offset] <Don't generate header>")
+	print("ANYTHING being within the <don't generate header> area will disable generating a header.")
 	sys.exit(0)
 
 outputf = wave.open(sys.argv[1]+'_BIN.wav','wb')
@@ -67,57 +85,61 @@ filename = sys.argv[1]
 # Add silence
 for x in range(0, framerate):
 	outputf.writeframes(int.to_bytes(0, 1, "little"))
+if len(sys.argv) < 5:
+	for x in range(0, 256):
+		writeByte(0xff)
+		# Write 256 bytes of 1s
 
-for x in range(0, 256):
-	writeByte(0xff)
-	# Write 256 bytes of 1s
+	write(0) #Sync bit
+	writeByte(0x16) #Sync byte
 
-write(0) #Sync bit
-writeByte(0x16) #Sync byte
+	#reset crc calculation
+	crc_reg = 0xFFFF
+	writeByte(0xA5)
 
-#reset crc calculation
-crc_reg = 0xFFFF
-writeByte(0xA5)
-
-for x in range(0, 8):
-	if (x >= len(filename)):
-		writeByte(0b00100000)
-	else:
-		writeByte(ord(filename[x]))
-# Flag for memory area
-writeByte(0x01)
-# Write filesize word
-filesize = (os.stat(sys.argv[0]).st_size).to_bytes(2, "little")
-writeByte(filesize[0])
-writeByte(filesize[1])
-
-# Segment word
-writeByte(segment[0])
-writeByte(segment[1])
-# offset word
-writeByte(offset[0])
-writeByte(offset[1])
-
-# Filler
-writeByte(0x00)
-for x in range(0, 239):
+	for x in range(0, 8):
+		if (x >= len(filename)):
+			writeByte(0b00100000)
+		else:
+			writeByte(ord(filename[x]))
+	# Flag for memory area
 	writeByte(0x01)
+	# Write filesize word
+	filesize = (os.stat(sys.argv[0]).st_size).to_bytes(2, "little")
+	writeByte(filesize[0])
+	writeByte(filesize[1])
 
-# Write crc
-crcbyte = (crc_reg^0xffff).to_bytes(2, "little")
-writeByte(crcbyte[1])
-writeByte(crcbyte[0])
+	# Segment word
+	writeByte(segment[0])
+	writeByte(segment[1])
+	# offset word
+	writeByte(offset[0])
+	writeByte(offset[1])
 
-writeByte(0xFF)
-writeByte(0xFF)
-writeByte(0xFF)
-writeByte(0xFF)
+	# Filler
+	writeByte(0x00)
+	for x in range(0, 239):
+		writeByte(0x01)
 
-print("Basic header finished at "+str(datetime.now() - startTime))
+	# Write crc
+	print("CRC is " + str(crc_reg))
+	crcbyte = (crc_reg^0xffff).to_bytes(2, "little")
+	writeByte(crcbyte[1])
+	writeByte(crcbyte[0])
+	print(crcbyte[1], crcbyte[0])
 
-# Add silence
-for x in range(0, framerate):
-	outputf.writeframes(int.to_bytes(0, 1, "little"))
+	writeByte(0xFF)
+	writeByte(0xFF)
+	writeByte(0xFF)
+	writeByte(0xFF)
+
+	print("BASIC header finished at "+str(datetime.now() - startTime))
+
+	# Add silence
+	for x in range(0, framerate):
+		outputf.writeframes(int.to_bytes(0, 1, "little"))
+else:
+	print("Not generating a BASIC header")
 
 for x in range(0, 256):
 	writeByte(0xff)
