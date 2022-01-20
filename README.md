@@ -1,3 +1,5 @@
+# The C++ Version does not load on the IBM 5150, use the python version for now until I fix it
+
 This project has been ported to C++. Inside the python directory is the python3 version, details are below.
 This will convert binary and ascii files into a format that can be loaded over the IBM PC's cassette port.
 
