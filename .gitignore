@@ -6,3 +6,5 @@
 *.xcf
 *.png
 *.out
+.vscode/
+*.exe
