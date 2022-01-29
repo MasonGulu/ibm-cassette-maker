@@ -22,7 +22,7 @@ import sys, wave, os
 one = 0.001 # Time in seconds
 zero = 0.0005 # Time in seconds
 
-framerate = 44100 # Frames / second
+framerate = 4000 # Frames / second
 oneframe = (one / 2) * framerate # Frames per cycle, two cycles per number
 zeroframe = (zero / 2) * framerate # Frames per cycle, two cycles per number
 
@@ -53,6 +53,7 @@ def crc_gen(crc_bit):
 		crc_reg = crc_reg ^ 0x0810
 		carry = 1
 	crc_reg = ((crc_reg << 1) + carry) & 0xffff
+	print(crc_reg)
 
 def write(value):
 	crc_gen(value)
