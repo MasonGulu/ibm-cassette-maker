@@ -1,12 +1,18 @@
-# The C++ Version does not load on the IBM 5150, use the python version for now until I fix it
+# The C++ Version functions!
 
 This project has been ported to C++. Inside the python directory is the python3 version, details are below.
 This will convert binary and ascii files into a format that can be loaded over the IBM PC's cassette port.
 
 Usage:
-ibmwriter (bin, bas) [input file] [output name] [segment] [offset]
+ibmwriter (bin, bas, raw) [input file] [output name] [segment] [offset]
 
-Old python details below.
+* bin - write a binary file with a basic header to be loaded directly into RAM
+* bas - write a txt BASIC file with a basic header to be loaded by BASIC and executed
+* raw - write a binary file without a basic header, for use by advanced users
+
+As far as I can tell the segment and offset are absolutely pointless. I tend to just set both to 0.
+
+### Python version
 
 This is a project written in python that will allow you to create wav audio files that can be loaded through cassette basic on the IBM 5150.
 
