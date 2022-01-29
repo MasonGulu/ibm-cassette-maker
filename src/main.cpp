@@ -26,6 +26,8 @@
 
 using namespace std;
 
+#define version "1.1"
+
 
 LL<double>* audioLLPos;
 uint16_t CRC = 0xFFFF;
@@ -212,6 +214,7 @@ int lengthOfLL(LL<T>* start) {
 
 int main(int argCount, char *argValues[]) {
     cout << "This program is licensed under GPLv2 and comes with ABSOLUTELY NO WARRANTY." << endl;
+    cout << "Version " << version << endl;
     if (argCount < 6) {
         cout << "Usage: " << argValues[0] << " <raw, bin, bas> [input] [output] [segment] [offset]" << endl;
         return 0;
