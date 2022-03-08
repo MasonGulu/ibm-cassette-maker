@@ -230,6 +230,26 @@ int lengthOfLL(LL<T>* start) {
     return count; 
 }
 
+char* rearrangeImgBuffer(char* ifBuffer, int ifSize) {
+    // Take the disk image which is currently laid out like
+    // Head 0 (track 0, track 1...), Head 1 (track 0, track 1)
+    // and make it like 
+    // Head 0 track 0, head 1 track 0, head 0 track 1, head 1 track 1...
+    const int DISKSIZE = 327680;
+    const int TRACKSIZE = 4096;
+    char* newBuffer = new char[DISKSIZE];
+    for (int i = 0; i < (DISKSIZE/TRACKSIZE/2); i ++) {
+        // loop over half of the tracks in the image
+        for (int delta = 0; delta < TRACKSIZE; delta++) {
+            // Perform the interlacing
+            newBuffer[( i*2   *TRACKSIZE)+delta] = ifBuffer[(i*TRACKSIZE)             +delta];
+            newBuffer[((i*2+1)*TRACKSIZE)+delta] = ifBuffer[(i*TRACKSIZE)+(DISKSIZE/2)+delta];
+        }
+    }
+    delete ifBuffer;
+    return newBuffer;
+}
+
 int main(int argCount, char *argValues[]) {
     cout << "This program is licensed under GPLv2 and comes with ABSOLUTELY NO WARRANTY." << endl;
     cout << "Version " << version << endl;
@@ -274,6 +294,11 @@ int main(int argCount, char *argValues[]) {
             binWrite(ifBuffer, (int)ifSize, argValues[3], atoi(argValues[4]), atoi(argValues[5]), false);
             break;
         case 'g': // img
+            if (ifSize != 327680) {
+                cout << "File is not 320kb." << endl;
+                return 0;
+            }
+            ifBuffer = rearrangeImgBuffer(ifBuffer, (int)ifSize);
             imgWrite(ifBuffer, (int)ifSize, argValues[3], atoi(argValues[4]), atoi(argValues[5]));
             break;
         default:
