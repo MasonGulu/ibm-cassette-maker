@@ -145,6 +145,22 @@ void generateBasicHeader(char* filename, uint16_t segment, uint16_t offset, int 
     generateSilence();
 }
 
+bool writeBlock(char* inputfile, int size, int &base, int &written, int bytes, bool replaceEndline=false) {
+    bool fileend = false;
+    for (int x = 0; x < bytes; x++) {
+        if (base+x+1 > size) fileend = true;
+        if (fileend) writeByte(0b00100000); // Fill rest of block with NULL
+        else {
+            if (replaceEndline) (inputfile[base+x] == 0x0A) ? writeByte(0x0D) : writeByte(inputfile[base+x]);
+            else writeByte(inputfile[base+x]);
+            written++;
+        }
+    }
+    writeCRC();
+    base+=bytes;
+    return fileend;
+}
+
 void binWrite(char* inputfile, int size, char* filename, uint16_t segment, uint16_t offset, bool basicHeader = true) {
     generateSilence();
     if (basicHeader) {
@@ -156,21 +172,30 @@ void binWrite(char* inputfile, int size, char* filename, uint16_t segment, uint1
     generateLeader();
     while (!fileend) {
         CRC = 0xFFFF;
-        for (int x = 0; x < 256; x++) {
-            if (base+x+1 > size) fileend = true;
-            if (fileend) writeByte(0b00100000); // Fill rest of block with NULL
-            else {
-                writeByte(inputfile[base+x]);
-                written++;
-            }
-        }
-        writeCRC();
-        base+=256;
+        fileend = writeBlock(inputfile, size, base, written, 256);
     }
     cout << "Processed " << written << " bytes." << endl;
     generateTrailer();
     // Leadout
     generateSilence();
+}
+
+
+void imgWrite(char* inputfile, int size, char* filename, uint16_t segment, uint16_t offset) {
+    generateSilence();
+    bool fileend = false;
+    int base = 0;
+    int written = 0;
+    while (!fileend) {
+        generateLeader();
+        for (int i = 0; i < 32; i++) {
+            CRC = 0xFFFF;
+            fileend = writeBlock(inputfile, size, base, written, 256);
+        }
+        cout << written << endl;
+        generateTrailer();
+        generateSilence(6);
+    }
 }
 
 void asciiWrite(char* inputfile, int size, char* filename, uint16_t segment, uint16_t offset) {
@@ -184,21 +209,14 @@ void asciiWrite(char* inputfile, int size, char* filename, uint16_t segment, uin
         generateLeader();
         CRC = 0xFFFF;
         ((size - written) > 255) ? writeByte(0x00) : writeByte(size-written);
-        for (int x = 0; x < 255; x++) {
-            if (base+x+1 > size) fileend = true;
-            if (fileend) writeByte(0b00100000);
-            else {
-                (inputfile[base+x] == 0x0A) ? writeByte(0x0D) : writeByte(inputfile[base+x]);
-                written++;
-            }
-        }
-        writeCRC();
-        base+=255;
+        fileend = writeBlock(inputfile, size, base, written, 255, true);
         generateTrailer();
         generateSilence();
     }
     cout << "Processed " << written << " bytes." << endl;
 }
+
+
 
 template <typename T>
 int lengthOfLL(LL<T>* start) {
@@ -234,7 +252,7 @@ int main(int argCount, char *argValues[]) {
         cout << "ERROR: The input file cannot be opened." << endl;
         return 0;
     }
-    if (ifSize > MAX_INPUT_FILE_SIZE) {
+    if ((ifSize > MAX_INPUT_FILE_SIZE) && (argValues[1][2] != 'g')) {
         cout << "ERROR: The input file is larger than " << MAX_INPUT_FILE_SIZE << " bytes." << endl;
         return 0;
     }
@@ -253,6 +271,10 @@ int main(int argCount, char *argValues[]) {
             break;
         case 'w': // raw
             binWrite(ifBuffer, (int)ifSize, argValues[3], atoi(argValues[4]), atoi(argValues[5]), false);
+            break;
+        case 'g': // img
+            imgWrite(ifBuffer, (int)ifSize, argValues[3], atoi(argValues[4]), atoi(argValues[5]));
+            break;
         default:
             cout << "Invalid argument." << endl;
             return 0;
