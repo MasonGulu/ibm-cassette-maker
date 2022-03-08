@@ -26,7 +26,7 @@
 
 using namespace std;
 
-#define version "1.1"
+#define version "1.2"
 
 
 LL<double>* audioLLPos;
@@ -182,7 +182,7 @@ void binWrite(char* inputfile, int size, char* filename, uint16_t segment, uint1
 
 
 void imgWrite(char* inputfile, int size, char* filename, uint16_t segment, uint16_t offset) {
-    generateSilence();
+    generateSilence(3);
     bool fileend = false;
     int base = 0;
     int written = 0;
@@ -194,7 +194,7 @@ void imgWrite(char* inputfile, int size, char* filename, uint16_t segment, uint1
         }
         cout << written << endl;
         generateTrailer();
-        generateSilence(6);
+        generateSilence(10);
     }
 }
 
@@ -234,7 +234,8 @@ int main(int argCount, char *argValues[]) {
     cout << "This program is licensed under GPLv2 and comes with ABSOLUTELY NO WARRANTY." << endl;
     cout << "Version " << version << endl;
     if (argCount < 6) {
-        cout << "Usage: " << argValues[0] << " <raw, bin, bas> [input] [output] [segment] [offset]" << endl;
+        cout << "Usage: " << argValues[0] << " <raw, bin, bas, img(*)> [input] [output] [segment] [offset]" << endl;
+        cout << "(*) img is for 320kb disk images, see github page."
         return 0;
     }
 
