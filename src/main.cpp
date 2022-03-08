@@ -235,7 +235,7 @@ int main(int argCount, char *argValues[]) {
     cout << "Version " << version << endl;
     if (argCount < 6) {
         cout << "Usage: " << argValues[0] << " <raw, bin, bas, img(*)> [input] [output] [segment] [offset]" << endl;
-        cout << "(*) img is for 320kb disk images, see github page."
+        cout << "(*) img is for 320kb disk images, see github page." << endl;
         return 0;
     }
 
