@@ -26,7 +26,7 @@ Download floppy.wav and diskimage.wav from the releases section.
   * def seg = &h2000
   * bload"floppy",0
 * Play floppy.wav into your cassette input.
-  * Once the basic header plays you should see "Found floppy.M", let the file continue loading.
+  * Once the basic header plays you should see "floppy.M found", let the file continue loading.
 * Once the file finishes loading run the following commands.
   * o = 0
   * call o
