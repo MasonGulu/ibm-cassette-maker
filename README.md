@@ -24,7 +24,7 @@ diskimage.wav is a Dos 3.3 boot disk with debug.com, a text editor, and several 
 Download floppy.wav and diskimage.wav from the releases section.
 * Boot your 5150/compatible to BASIC and run the following commands.
   * def seg = &h2000
-  * bload"floppytools",0
+  * bload"floppy",0
 * Play floppy.wav into your cassette input.
   * Once the basic header plays you should see "Found floppy.M", let the file continue loading.
 * Once the file finishes loading run the following commands.
@@ -34,17 +34,11 @@ Download floppy.wav and diskimage.wav from the releases section.
 * Push 1 to format the disk.
   * If the disk fails to format it probably has bad sectors, try a different disk.
 * Push 2 to write the disk.
-  * Push enter at the prompt and start playing diskimage.wav.
+  * Push anyting but escape at the prompt and start playing diskimage.wav.
   * **THIS WILL TAKE 40+ MINUTES.**
 
 ## Using your own disk images
 The disk image you want to use has to be in an img raw format, and *must* be 320kb. This program does not support writing 360kb disks.
-If  you want to assemble the floppy formatting/writing program follow these steps.
-* Ensure your working directory is the floppytools/ directory
-* Install nasm and run the following command
-  * nasm main.asm -o floppy.bin
-* Run ibmwriter with the following parameters, adjusting to fit your directory structure. This will produce a file called *floppy*. This is a wave file, you can rename the file to include the extension afterwards.
-  * ibmwriter bin floppy.bin floppy 0 0
 * Take your disk image and run ibmwriter with the following parameters
   * ibmwriter img <disk.img> disk.wav 0 0
 * Follow the instructions under Quickstart for the audio files you created.
@@ -52,3 +46,11 @@ If  you want to assemble the floppy formatting/writing program follow these step
 # floppy.bin
 This is an 8086 assembly program that will format a floppy and then write track by track information that's loaded from the cassette port.
 **This program is only intended to be run on an IBM 5150 and does NOT follow standards expected by later PCs. The presense of an XT-IDE will cause the program to function incorrectly. REMOVE YOUR XT-IDE FROM THE 5150/compatible BEFORE ATTEMPTING TO USE THIS PROGRAM.**
+
+## Assembling floppy.bin
+If you want to assemble the floppy formatting/writing program follow these steps.
+* Ensure your working directory is the floppytools/ directory
+* Install nasm and run the following command
+  * nasm main.asm -o floppy.bin
+* Run ibmwriter with the following parameters, adjusting to fit your directory structure. This will produce a file called *floppy*. This is a wave file, you can rename the file to include the extension afterwards.
+  * ibmwriter bin floppy.bin floppy 0 0
