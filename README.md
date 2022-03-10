@@ -54,3 +54,4 @@ If you want to assemble the floppy formatting/writing program follow these steps
   * nasm main.asm -o floppy.bin
 * Run ibmwriter with the following parameters, adjusting to fit your directory structure. This will produce a file called *floppy*. This is a wave file, you can rename the file to include the extension afterwards.
   * ibmwriter bin floppy.bin floppy 0 0
+
