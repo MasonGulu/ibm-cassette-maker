@@ -26,7 +26,7 @@
 
 using namespace std;
 
-#define version "1.1"
+#define version "1.2"
 
 
 LL<double>* audioLLPos;
@@ -39,8 +39,8 @@ const float FRAMERATE = 4000.f;
 const float FRAMES_ONE  = (SECONDS_ONE / 2) * FRAMERATE;  // Frames per cycle, two cycles per number
 const float FRAMES_ZERO = (SECONDS_TWO / 2) * FRAMERATE; // Frames per cycle, two cycles per number
 
-const double VALUE_ON = 0x7FFF;
-const double VALUE_OFF = 0x0000;
+const double VALUE_ON = 0xFFFF;
+const double VALUE_OFF = -0xFFFF;
 
 const uint16_t MAX_INPUT_FILE_SIZE = 0xFFFF;
 
@@ -90,7 +90,7 @@ void generateTrailer() {
 void generateSilence(int seconds=1) {
     for (int x = 0; x < FRAMERATE*seconds; x++) {
         // 1 second of silence at beginning of file
-        audioLLPos->appendToEnd(VALUE_OFF);
+        audioLLPos->appendToEnd(0);
         audioLLPos = audioLLPos->next;
     }
 }
@@ -145,6 +145,20 @@ void generateBasicHeader(char* filename, uint16_t segment, uint16_t offset, int 
     generateSilence();
 }
 
+void writeBlock(char* inputfile, int size, int &base, int &written, int bytes, bool &fileend, bool replaceEndline=false) {
+    for (int x = 0; x < bytes; x++) {
+        if (base+x+1 > size) fileend = true;
+        if (fileend) writeByte(0b00100000); // Fill rest of block with NULL
+        else {
+            if (replaceEndline) (inputfile[base+x] == 0x0A) ? writeByte(0x0D) : writeByte(inputfile[base+x]);
+            else writeByte(inputfile[base+x]);
+            written++;
+        }
+    }
+    writeCRC();
+    base+=bytes;
+}
+
 void binWrite(char* inputfile, int size, char* filename, uint16_t segment, uint16_t offset, bool basicHeader = true) {
     generateSilence();
     if (basicHeader) {
@@ -156,21 +170,34 @@ void binWrite(char* inputfile, int size, char* filename, uint16_t segment, uint1
     generateLeader();
     while (!fileend) {
         CRC = 0xFFFF;
-        for (int x = 0; x < 256; x++) {
-            if (base+x+1 > size) fileend = true;
-            if (fileend) writeByte(0b00100000); // Fill rest of block with NULL
-            else {
-                writeByte(inputfile[base+x]);
-                written++;
-            }
-        }
-        writeCRC();
-        base+=256;
+        writeBlock(inputfile, size, base, written, 256, fileend);
     }
     cout << "Processed " << written << " bytes." << endl;
     generateTrailer();
     // Leadout
     generateSilence();
+}
+
+
+void imgWrite(char* inputfile, int size, char* filename, uint16_t segment, uint16_t offset) {
+    generateSilence(3);
+    bool fileend = false;
+    int base = 0;
+    int written = 0;
+    int tracksWritten = 0;
+    while (!fileend) {
+        generateLeader();
+        for (int i = 0; i < 32; i++) {
+            CRC = 0xFFFF;
+            writeBlock(inputfile, size, base, written, 256, fileend);
+        }
+        tracksWritten++;
+        cout << "Wrote " << tracksWritten << " tracks; " << written << " bytes." << endl;
+        if (tracksWritten == 40) fileend=true;
+        // For some reason my fileend logic doesn't work in this specific instance, so hardcode it! Filesize is already enforced anyways.
+        generateTrailer();
+        generateSilence(10);
+    }
 }
 
 void asciiWrite(char* inputfile, int size, char* filename, uint16_t segment, uint16_t offset) {
@@ -184,16 +211,7 @@ void asciiWrite(char* inputfile, int size, char* filename, uint16_t segment, uin
         generateLeader();
         CRC = 0xFFFF;
         ((size - written) > 255) ? writeByte(0x00) : writeByte(size-written);
-        for (int x = 0; x < 255; x++) {
-            if (base+x+1 > size) fileend = true;
-            if (fileend) writeByte(0b00100000);
-            else {
-                (inputfile[base+x] == 0x0A) ? writeByte(0x0D) : writeByte(inputfile[base+x]);
-                written++;
-            }
-        }
-        writeCRC();
-        base+=255;
+        writeBlock(inputfile, size, base, written, 255, fileend, true);
         generateTrailer();
         generateSilence();
     }
@@ -216,7 +234,8 @@ int main(int argCount, char *argValues[]) {
     cout << "This program is licensed under GPLv2 and comes with ABSOLUTELY NO WARRANTY." << endl;
     cout << "Version " << version << endl;
     if (argCount < 6) {
-        cout << "Usage: " << argValues[0] << " <raw, bin, bas> [input] [output] [segment] [offset]" << endl;
+        cout << "Usage: " << argValues[0] << " <raw, bin, bas, img(*)> [input] [output] [segment] [offset]" << endl;
+        cout << "(*) img is for 320kb disk images, see README." << endl;
         return 0;
     }
 
@@ -234,7 +253,7 @@ int main(int argCount, char *argValues[]) {
         cout << "ERROR: The input file cannot be opened." << endl;
         return 0;
     }
-    if (ifSize > MAX_INPUT_FILE_SIZE) {
+    if ((ifSize > MAX_INPUT_FILE_SIZE) && (argValues[1][2] != 'g')) {
         cout << "ERROR: The input file is larger than " << MAX_INPUT_FILE_SIZE << " bytes." << endl;
         return 0;
     }
@@ -253,6 +272,15 @@ int main(int argCount, char *argValues[]) {
             break;
         case 'w': // raw
             binWrite(ifBuffer, (int)ifSize, argValues[3], atoi(argValues[4]), atoi(argValues[5]), false);
+            break;
+        case 'g': // img
+            if (ifSize != 327680) {
+                cout << "File is not 320kb." << endl;
+                return 0;
+            }
+            // buffer is already interlaced.
+            imgWrite(ifBuffer, (int)ifSize, argValues[3], atoi(argValues[4]), atoi(argValues[5]));
+            break;
         default:
             cout << "Invalid argument." << endl;
             return 0;
