@@ -39,8 +39,8 @@ const float FRAMERATE = 4000.f;
 const float FRAMES_ONE  = (SECONDS_ONE / 2) * FRAMERATE;  // Frames per cycle, two cycles per number
 const float FRAMES_ZERO = (SECONDS_TWO / 2) * FRAMERATE; // Frames per cycle, two cycles per number
 
-const double VALUE_ON = 0x7FFF;
-const double VALUE_OFF = 0x0000;
+const double VALUE_ON = 0xFFFF;
+const double VALUE_OFF = -0xFFFF;
 
 const uint16_t MAX_INPUT_FILE_SIZE = 0xFFFF;
 
@@ -90,7 +90,7 @@ void generateTrailer() {
 void generateSilence(int seconds=1) {
     for (int x = 0; x < FRAMERATE*seconds; x++) {
         // 1 second of silence at beginning of file
-        audioLLPos->appendToEnd(VALUE_OFF);
+        audioLLPos->appendToEnd(0);
         audioLLPos = audioLLPos->next;
     }
 }
@@ -145,8 +145,7 @@ void generateBasicHeader(char* filename, uint16_t segment, uint16_t offset, int 
     generateSilence();
 }
 
-bool writeBlock(char* inputfile, int size, int &base, int &written, int bytes, bool replaceEndline=false) {
-    bool fileend = false;
+void writeBlock(char* inputfile, int size, int &base, int &written, int bytes, bool &fileend, bool replaceEndline=false) {
     for (int x = 0; x < bytes; x++) {
         if (base+x+1 > size) fileend = true;
         if (fileend) writeByte(0b00100000); // Fill rest of block with NULL
@@ -158,7 +157,6 @@ bool writeBlock(char* inputfile, int size, int &base, int &written, int bytes, b
     }
     writeCRC();
     base+=bytes;
-    return fileend;
 }
 
 void binWrite(char* inputfile, int size, char* filename, uint16_t segment, uint16_t offset, bool basicHeader = true) {
@@ -172,7 +170,7 @@ void binWrite(char* inputfile, int size, char* filename, uint16_t segment, uint1
     generateLeader();
     while (!fileend) {
         CRC = 0xFFFF;
-        fileend = writeBlock(inputfile, size, base, written, 256);
+        writeBlock(inputfile, size, base, written, 256, fileend);
     }
     cout << "Processed " << written << " bytes." << endl;
     generateTrailer();
@@ -186,13 +184,17 @@ void imgWrite(char* inputfile, int size, char* filename, uint16_t segment, uint1
     bool fileend = false;
     int base = 0;
     int written = 0;
+    int tracksWritten = 0;
     while (!fileend) {
         generateLeader();
         for (int i = 0; i < 32; i++) {
             CRC = 0xFFFF;
-            fileend = writeBlock(inputfile, size, base, written, 256);
+            writeBlock(inputfile, size, base, written, 256, fileend);
         }
-        cout << written << endl;
+        tracksWritten++;
+        cout << "Wrote " << tracksWritten << " tracks; " << written << " bytes." << endl;
+        if (tracksWritten == 40) fileend=true;
+        // For some reason my fileend logic doesn't work in this specific instance, so hardcode it! Filesize is already enforced anyways.
         generateTrailer();
         generateSilence(10);
     }
@@ -209,14 +211,12 @@ void asciiWrite(char* inputfile, int size, char* filename, uint16_t segment, uin
         generateLeader();
         CRC = 0xFFFF;
         ((size - written) > 255) ? writeByte(0x00) : writeByte(size-written);
-        fileend = writeBlock(inputfile, size, base, written, 255, true);
+        writeBlock(inputfile, size, base, written, 255, fileend, true);
         generateTrailer();
         generateSilence();
     }
     cout << "Processed " << written << " bytes." << endl;
 }
-
-
 
 template <typename T>
 int lengthOfLL(LL<T>* start) {
@@ -230,32 +230,12 @@ int lengthOfLL(LL<T>* start) {
     return count; 
 }
 
-char* rearrangeImgBuffer(char* ifBuffer, int ifSize) {
-    // Take the disk image which is currently laid out like
-    // Head 0 (track 0, track 1...), Head 1 (track 0, track 1)
-    // and make it like 
-    // Head 0 track 0, head 1 track 0, head 0 track 1, head 1 track 1...
-    const int DISKSIZE = 327680;
-    const int TRACKSIZE = 4096;
-    char* newBuffer = new char[DISKSIZE];
-    for (int i = 0; i < (DISKSIZE/TRACKSIZE/2); i ++) {
-        // loop over half of the tracks in the image
-        for (int delta = 0; delta < TRACKSIZE; delta++) {
-            // Perform the interlacing
-            newBuffer[( i*2   *TRACKSIZE)+delta] = ifBuffer[(i*TRACKSIZE)             +delta];
-            newBuffer[((i*2+1)*TRACKSIZE)+delta] = ifBuffer[(i*TRACKSIZE)+(DISKSIZE/2)+delta];
-        }
-    }
-    delete ifBuffer;
-    return newBuffer;
-}
-
 int main(int argCount, char *argValues[]) {
     cout << "This program is licensed under GPLv2 and comes with ABSOLUTELY NO WARRANTY." << endl;
     cout << "Version " << version << endl;
     if (argCount < 6) {
         cout << "Usage: " << argValues[0] << " <raw, bin, bas, img(*)> [input] [output] [segment] [offset]" << endl;
-        cout << "(*) img is for 320kb disk images, see github page." << endl;
+        cout << "(*) img is for 320kb disk images, see README." << endl;
         return 0;
     }
 
@@ -298,7 +278,7 @@ int main(int argCount, char *argValues[]) {
                 cout << "File is not 320kb." << endl;
                 return 0;
             }
-            ifBuffer = rearrangeImgBuffer(ifBuffer, (int)ifSize);
+            // buffer is already interlaced.
             imgWrite(ifBuffer, (int)ifSize, argValues[3], atoi(argValues[4]), atoi(argValues[5]));
             break;
         default:

@@ -8,3 +8,5 @@
 *.out
 .vscode/
 *.exe
+*.img
+*.IMG
