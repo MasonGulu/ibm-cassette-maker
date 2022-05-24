@@ -21,3 +21,6 @@ $(WOBJS) : | build
 
 build : 
 	mkdir build
+
+clean :
+	rm -r build ibmwriter.out ibmwriter.exe
