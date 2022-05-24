@@ -21,7 +21,7 @@
 #include <iostream>
 #include <fstream>
 #include <cfloat>
-#include "LL/LL.cpp"
+#include <queue>
 #include "AudioFile.h"
 
 using namespace std;
@@ -29,7 +29,7 @@ using namespace std;
 #define version "1.2"
 
 
-LL<double>* audioLLPos;
+std::queue<double> audioData;
 uint16_t CRC = 0xFFFF;
 
 const float SECONDS_ONE  = 0.001f;   // Time in seconds
@@ -57,12 +57,12 @@ void _writeBit(bool valueBit) {
     _writeCRC(valueBit);
     int len = ((valueBit) ? FRAMES_ONE : FRAMES_ZERO);
     for (int onlen = 0; onlen < len; onlen++) {
-        audioLLPos->appendToEnd(VALUE_ON);
-        audioLLPos = audioLLPos->next;
+        audioData.push(VALUE_ON);
+        cout << "WROTE " << VALUE_ON << " GOT " << audioData.back() << std::endl;
     }
     for (int offlen = 0; offlen < len; offlen++) {
-        audioLLPos->appendToEnd(VALUE_OFF);
-        audioLLPos = audioLLPos->next;
+        audioData.push(VALUE_OFF);
+        cout << "WROTE " << VALUE_OFF << " GOT " << audioData.back() << std::endl;
     }
 }
 
@@ -90,8 +90,7 @@ void generateTrailer() {
 void generateSilence(int seconds=1) {
     for (int x = 0; x < FRAMERATE*seconds; x++) {
         // 1 second of silence at beginning of file
-        audioLLPos->appendToEnd(0);
-        audioLLPos = audioLLPos->next;
+        audioData.push(0);
     }
 }
 
@@ -218,18 +217,6 @@ void asciiWrite(char* inputfile, int size, char* filename, uint16_t segment, uin
     cout << "Processed " << written << " bytes." << endl;
 }
 
-template <typename T>
-int lengthOfLL(LL<T>* start) {
-    int count = 0;
-    LL<T>* current = start;
-    while (current != NULL) 
-    { 
-        count++; 
-        current = current->next; 
-    } 
-    return count; 
-}
-
 int main(int argCount, char *argValues[]) {
     cout << "This program is licensed under GPLv2 and comes with ABSOLUTELY NO WARRANTY." << endl;
     cout << "Version " << version << endl;
@@ -258,9 +245,6 @@ int main(int argCount, char *argValues[]) {
         return 0;
     }
     // At this point the entire file contents is loaded into ifBuffer
-    LL<double>* audioLLBegin = new LL<double>;
-    audioLLBegin->data = 0;
-    audioLLPos = audioLLBegin;
     unsigned sampleCount = 1;
     
     switch(argValues[1][2]) {
@@ -287,17 +271,16 @@ int main(int argCount, char *argValues[]) {
     }
     AudioFile<double> audiofile;
     AudioFile<double>::AudioBuffer buffer;
-    int length = lengthOfLL<double>(audioLLBegin);
+    int length = audioData.size();
     buffer.resize(1);
     buffer[0].resize(length);
     audiofile.setAudioBufferSize(1, length);
     audiofile.setSampleRate(FRAMERATE);
     int index = 0;
-    audioLLPos = audioLLBegin;
     
-    while (audioLLPos != NULL) {
-        buffer[0][index] = audioLLPos->data;
-        audioLLPos = audioLLPos->next;
+    while (audioData.size() > 0) {
+        buffer[0][index] = audioData.front();
+        audioData.pop();
         index++;
     }
     cout << "Processed " << index << " frames." << endl;

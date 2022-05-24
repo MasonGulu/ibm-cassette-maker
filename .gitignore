@@ -10,3 +10,4 @@
 *.exe
 *.img
 *.IMG
+build/
