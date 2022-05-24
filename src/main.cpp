@@ -58,11 +58,9 @@ void _writeBit(bool valueBit) {
     int len = ((valueBit) ? FRAMES_ONE : FRAMES_ZERO);
     for (int onlen = 0; onlen < len; onlen++) {
         audioData.push(VALUE_ON);
-        cout << "WROTE " << VALUE_ON << " GOT " << audioData.back() << std::endl;
     }
     for (int offlen = 0; offlen < len; offlen++) {
         audioData.push(VALUE_OFF);
-        cout << "WROTE " << VALUE_OFF << " GOT " << audioData.back() << std::endl;
     }
 }
 
