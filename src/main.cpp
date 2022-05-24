@@ -20,7 +20,6 @@
 */
 #include <iostream>
 #include <fstream>
-#include <cfloat>
 #include <queue>
 #include "AudioFile.h"
 
