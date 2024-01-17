@@ -226,14 +226,14 @@ uint16_t segment = 0;
 uint16_t offset = 0;
 
 
-int parse_flags(int argc, char* argv[]) {
+void parse_flags(int argc, char* argv[]) {
     for (int i = 4; i < argc; i++) {
         if (strncmp(argv[i], "-86box", 6) == 0) {
             set_framerate(44100.0f);
         } else if (strncmp(argv[i], "-segment=", 9) == 0) {
-            segment = atoi(argv[i+9]);
+            segment = atoi(argv[i]+9);
         } else if (strncmp(argv[i], "-offset=", 8) == 0) {
-            offset = atoi(argv[i+8]);
+            offset = atoi(argv[i]+8);
         } else {
             printf("Unrecognized argument %s.\n", argv[i]);
         }
