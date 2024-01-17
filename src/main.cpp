@@ -27,7 +27,7 @@ using namespace std;
 
 #define version "1.3"
 #define LSB(value) (value & 0x00FF)
-#define MSB(value) (value >> 16)
+#define MSB(value) (value >> 8)
 
 std::queue<int8_t> audioData;
 uint16_t CRC = 0xFFFF;
@@ -111,6 +111,7 @@ void generate_basic_header(const char* basic_filename, uint16_t segment, uint16_
     write_byte(0xA5);
     // ^ Marks this block as BASIC
     bool endOfName = false;
+    printf("basic filename = %s", basic_filename);
     for (int x = 0; x < 8; x++) {
         if (!endOfName && basic_filename[x] == 0) endOfName = true;
         if (endOfName) write_byte(0b00100000);
@@ -254,7 +255,7 @@ int parse_args(int argc, char* argv[]) {
     parse_flags(argc, argv);
 
     basic_filename = string(argv[3]).substr(0, 8);
-    filename = basic_filename.append(".wav");
+    filename = basic_filename + ".wav";
 
     ifstream ifStream (argv[2], ios::binary|ios::ate);
     if (ifStream.is_open()) {
