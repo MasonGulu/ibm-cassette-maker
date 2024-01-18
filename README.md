@@ -3,7 +3,7 @@ This project has been ported to C++. The python version has been archived at htt
 This will convert binary and ascii files into a format that can be loaded over the IBM PC's cassette port.
 
 Usage:
-ibmwriter (bin, bas, raw, img) [input file] [output name] [segment] [offset]
+ibmwriter <bin, bas, raw, img> input basic_name [flags]
 
 Modes:
 * bin - write a binary file with basic header
@@ -11,6 +11,12 @@ Modes:
 * raw - write a binary file without a basic header
 * img - write a 320kb disk image with proper delays and spacing.
   * See below.
+
+Flags:
+* Set the segment/offset in the basic header. Have yet to find anything that this matters for. Defaults to 0.
+  * `-segment=<value>`
+  * `-offset=<value>`
+* `-86box` Increase the bitrate to 44.1kHz for [86box](https://86box.net/) compat. ~11x larger files and I've yet to have issues loading at the 4kHz default bitrate.
 
 # Cassette loading tips
 I recommend maxing out your volume. If you constantly get errors when loading over cassette try a different playback device.
@@ -40,7 +46,7 @@ Download floppy.wav and diskimage.wav from the releases section.
 ## Using your own disk images
 The disk image you want to use has to be in an img raw format, and *must* be 320kb. This program does not support writing 360kb disks.
 * Take your disk image and run ibmwriter with the following parameters
-  * ibmwriter img <disk.img> disk.wav 0 0
+  * ibmwriter img disk.img disk
 * Follow the instructions under Quickstart for the audio files you created.
 
 # floppy.bin
@@ -53,5 +59,5 @@ If you want to assemble the floppy formatting/writing program follow these steps
 * Install nasm and run the following command
   * nasm main.asm -o floppy.bin
 * Run ibmwriter with the following parameters, adjusting to fit your directory structure. This will produce a file called *floppy*. This is a wave file, you can rename the file to include the extension afterwards.
-  * ibmwriter bin floppy.bin floppy 0 0
+  * ibmwriter bin floppy.bin floppy
 
