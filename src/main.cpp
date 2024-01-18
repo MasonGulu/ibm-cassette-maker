@@ -111,7 +111,6 @@ void generate_basic_header(const char* basic_filename, uint16_t segment, uint16_
     write_byte(0xA5);
     // ^ Marks this block as BASIC
     bool endOfName = false;
-    printf("basic filename = %s", basic_filename);
     for (int x = 0; x < 8; x++) {
         if (!endOfName && basic_filename[x] == 0) endOfName = true;
         if (endOfName) write_byte(0b00100000);
