@@ -1,0 +1,4 @@
+form RAW BIN
+f build/asm.o,build/c.o
+OPTION START=entry
+NAME build/tools.bin
