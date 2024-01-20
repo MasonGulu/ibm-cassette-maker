@@ -1,3 +1,4 @@
+%ifndef GLOBAL
 
 ;;;;;;;;;;;;;;;;;;;;;;; Credit for this code goes to J. Bogin ;;;;;;;;;;;;;;;;;;;;;;;
 SUB_print:
@@ -52,3 +53,6 @@ STRING_return       db 13,10,0
 STRING_disk_info    db 'Head:Track ',0
 DATA_errcount       db 0
 DATA_disk:
+
+%define GLOBAL
+%endif
