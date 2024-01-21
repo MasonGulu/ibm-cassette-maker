@@ -9,6 +9,7 @@ extern int read(); // call int16h; scan code, ascii code
 extern char format(char sectors, struct format_loc loc, struct format_desc *info, char track);
 extern void reset(char drive);
 extern char verify(char sectors, struct format_loc loc, struct format_desc *info, char track);
+extern int get_seg();
 
 void print_int(unsigned int i) {
     char to_print[6];
@@ -130,7 +131,7 @@ char* get_error_str(int code) {
 }
 
 void update_disk_base(char tracks) {
-    int segment = 0x2000;
+    int segment = get_seg();
     int offset = (int) &disk_base;
     struct disk_base __far * LOCAL_BASE = segment :> offset;
     OLD_BASE = *INT_1E;
@@ -201,7 +202,7 @@ int do_format(char sectors) {
         print("Disk was successfully formatted.\r\n");
     } else {
         print_int(failed_tracks);
-        print(" tracks failed to format.\r\n");
+        print(" tracks failed to verify.\r\n");
         print("Disk cannot be for image writing.\r\n");
         return 1;
     }

@@ -9,6 +9,7 @@
     global    format_:near
     global    reset_:near
     global    verify_:near
+    global    get_seg_:near
 entry:
 
     push    ds
@@ -101,6 +102,11 @@ reset_ proc near
     pop dx
     ret
 reset_ endp
+
+get_seg_ proc near
+    mov ax, cs
+    ret
+get_seg_ endp
 
     .data?
 
