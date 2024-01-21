@@ -64,11 +64,20 @@ read_ endp
 
 format_ proc near
     ; char sectors, format_loc loc, format_desc *info, char track
+    push es
+
+    push ax
+    mov ax, cs
+    mov es, ax ; set ES to current CS
+    pop ax
+
     mov ah, 5
     mov ch, cl
     mov cl, 0
     int 13h
     mov al, ah ; return char
+
+    pop es
     ret
 format_ endp
 

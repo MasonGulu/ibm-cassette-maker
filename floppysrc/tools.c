@@ -70,7 +70,7 @@ void cpy(char __far * from, char __far * to, int n) {
 
 char newline[] = "\r\n";
 
-int __far * INT_1E = 0x0000 :> 0x0078; // int 1E
+struct disk_base __far * __far * INT_1E = 0x0000 :> 0x0078; // int 1E
 
 struct disk_base __far *OLD_BASE;
 
@@ -133,21 +133,19 @@ void update_disk_base(char tracks) {
     int segment = 0x2000;
     int offset = (int) &disk_base;
     struct disk_base __far * LOCAL_BASE = segment :> offset;
-    OLD_BASE = (struct disk_base __far *) INT_1E[0] :> INT_1E[1];
+    OLD_BASE = *INT_1E;
     cpy((char __far*)OLD_BASE, (char __far*)LOCAL_BASE, sizeof(struct disk_base));
 
-    // disk_base.EOT = tracks;
-    // if (tracks == 9) {
-    //     disk_base.gap_length = 0x18; // https://github.com/andreas-jonsson/imagedisk/blob/main/IMD.C#L241C18-L241C19
-    // }
+    disk_base.EOT = tracks;
+    if (tracks == 9) {
+        disk_base.gap_length = 0x18; // https://github.com/andreas-jonsson/imagedisk/blob/main/IMD.C#L241C18-L241C19
+    }
 
-    INT_1E[0] = _FP_SEG(LOCAL_BASE);
-    INT_1E[1] = _FP_OFF(LOCAL_BASE);
+    *INT_1E = LOCAL_BASE;
 }
 
 void revert_disk_base() {
-    INT_1E[0] = _FP_SEG(OLD_BASE);
-    INT_1E[1] = _FP_OFF(OLD_BASE);
+    *INT_1E = OLD_BASE;
 }
 
 void update_format_table(char track, char head) {
@@ -166,7 +164,7 @@ int do_format(char sectors) {
     int errors;
     int failed_tracks = 0;
     struct format_loc loc = {0, 0};
-    for (track = 0; track < 3; track++) {
+    for (track = 0; track < 40; track++) {
         for (head = 0; head < 2; head++) {
             errors = 0;
             print("Formatting Track: ");
