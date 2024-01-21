@@ -211,9 +211,9 @@ void parse_flags(int argc, char* argv[]) {
         if (strncmp(argv[i], "-86box", 6) == 0) {
             set_framerate(44100.0f);
         } else if (strncmp(argv[i], "-segment=", 9) == 0) {
-            segment = atoi(argv[i]+9);
+            segment = strtol(argv[i]+9, NULL, 0);
         } else if (strncmp(argv[i], "-offset=", 8) == 0) {
-            offset = atoi(argv[i]+8);
+            offset = strtol(argv[i]+8, NULL, 0);
         } else {
             printf("Unrecognized argument %s.\n", argv[i]);
         }
